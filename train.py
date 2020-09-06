@@ -119,11 +119,13 @@ for epoch in range(opt.epoch, opt.n_epochs):
 
         # GAN loss
         fake_B = netG_A2B(real_A)
-        pred_fake = netD_B(fake_B)
+        pred_fake = netD_B(fake_B).reshape(1)
+        print(pred_fake)
+        print(target_real)
         loss_GAN_A2B = criterion_GAN(pred_fake, target_real)
 
         fake_A = netG_B2A(real_B)
-        pred_fake = netD_A(fake_A)
+        pred_fake = netD_A(fake_A).reshape(1)
         loss_GAN_B2A = criterion_GAN(pred_fake, target_real)
 
         # Cycle loss
@@ -144,12 +146,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
         optimizer_D_A.zero_grad()
 
         # Real loss
-        pred_real = netD_A(real_A)
+        pred_real = netD_A(real_A).reshape(1)
         loss_D_real = criterion_GAN(pred_real, target_real)
 
         # Fake loss
         fake_A = fake_A_buffer.push_and_pop(fake_A)
-        pred_fake = netD_A(fake_A.detach())
+        pred_fake = netD_A(fake_A.detach()).reshape(1)
         loss_D_fake = criterion_GAN(pred_fake, target_fake)
 
         # Total loss
@@ -163,12 +165,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
         optimizer_D_B.zero_grad()
 
         # Real loss
-        pred_real = netD_B(real_B)
+        pred_real = netD_B(real_B).reshape(1)
         loss_D_real = criterion_GAN(pred_real, target_real)
         
         # Fake loss
         fake_B = fake_B_buffer.push_and_pop(fake_B)
-        pred_fake = netD_B(fake_B.detach())
+        pred_fake = netD_B(fake_B.detach()).reshape(1)
         loss_D_fake = criterion_GAN(pred_fake, target_fake)
 
         # Total loss
