@@ -52,7 +52,7 @@ class Generator(nn.Module):
             out_features = in_features//2
 
         # Output layer
-        model += [  nn.ReflectionPad2d(3),
+        model += [  nn.ReflectionPad2d(2),
                     nn.Conv2d(64, output_nc, 7),
                     nn.Tanh() ]
 
