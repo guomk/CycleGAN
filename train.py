@@ -90,7 +90,7 @@ else:
                     transforms.RandomCrop(opt.size), 
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
-                    transforms.Normalize((0.5), (0.5)) ]
+                    transforms.Normalize((0.5,), (0.5,)) ]
                     
 dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, unaligned=True), 
                         batch_size=opt.batchSize, shuffle=True, num_workers=opt.n_cpu)
