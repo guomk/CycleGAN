@@ -6,6 +6,7 @@ import itertools
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
+from torch import Tensor
 from PIL import Image
 import torch
 
@@ -102,9 +103,15 @@ logger = Logger(opt.n_epochs, len(dataloader))
 ###### Training ######
 for epoch in range(opt.epoch, opt.n_epochs):
     for i, batch in enumerate(dataloader):
-        # Set model input
-        real_A = Variable(input_A.copy_(batch['A']))
-        real_B = Variable(input_B.copy_(batch['B']))
+
+        # Skip the final batch when the total number of training images modulo batch-size does not equal zero
+        if len(batch['A']) != opt.batchSize or len(batch['B']) != opt.batchSize:
+            continue   #TODO
+
+        # Set model input        
+        real_A = input_A.copy_(batch['A'])
+        real_B = input_B.copy_(batch['B'])
+        
 
         ###### Generators A2B and B2A ######
         optimizer_G.zero_grad()
