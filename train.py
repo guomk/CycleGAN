@@ -1,7 +1,28 @@
 #!/usr/bin/python3
 
+import os
 import argparse
 import itertools
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--epoch', type=int, default=0, help='starting epoch')
+parser.add_argument('--n_epochs', type=int, default=200, help='number of epochs of training')
+parser.add_argument('--batchSize', type=int, default=1, help='size of the batches')
+parser.add_argument('--dataroot', type=str, default='datasets/horse2zebra/', help='root directory of the dataset')
+parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate')
+parser.add_argument('--decay_epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
+parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
+parser.add_argument('--input_nc', type=int, default=1, help='number of channels of input data')
+parser.add_argument('--output_nc', type=int, default=1, help='number of channels of output data')
+parser.add_argument('--cuda', action='store_true', default=True, help='use GPU computation')
+parser.add_argument('--n_cpu', type=int, default=8, help='number of cpu threads to use during batch generation')
+parser.add_argument('--gpu', type=str, default='0,1', help='choose which gpu(s) to use during training')
+opt = parser.parse_args()
+print(opt)
+
+# Set gpu(s)
+os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
 
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
@@ -18,30 +39,22 @@ from utils import Logger
 from utils import weights_init_normal
 from datasets import ImageDataset
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--epoch', type=int, default=0, help='starting epoch')
-parser.add_argument('--n_epochs', type=int, default=200, help='number of epochs of training')
-parser.add_argument('--batchSize', type=int, default=1, help='size of the batches')
-parser.add_argument('--dataroot', type=str, default='datasets/horse2zebra/', help='root directory of the dataset')
-parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate')
-parser.add_argument('--decay_epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
-parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
-parser.add_argument('--input_nc', type=int, default=1, help='number of channels of input data')
-parser.add_argument('--output_nc', type=int, default=1, help='number of channels of output data')
-parser.add_argument('--cuda', action='store_true', help='use GPU computation')
-parser.add_argument('--n_cpu', type=int, default=8, help='number of cpu threads to use during batch generation')
-opt = parser.parse_args()
-print(opt)
-
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
+
+for i in opt.gpu.split(','):
+    i = int(i)
+    print(f'cuda:[{i}] - {torch.cuda.get_device_name(i)}')
+
 ###### Definition of variables ######
-# Networ3ks
-netG_A2B = Generator(opt.input_nc, opt.output_nc)
-netG_B2A = Generator(opt.output_nc, opt.input_nc)
-netD_A = Discriminator(opt.input_nc)
-netD_B = Discriminator(opt.output_nc)
+# Networks
+netG_A2B = torch.nn.DataParallel(Generator(opt.input_nc, opt.output_nc))
+netG_B2A = torch.nn.DataParallel(Generator(opt.output_nc, opt.input_nc))
+netD_A = torch.nn.DataParallel(Discriminator(opt.input_nc))
+netD_B = torch.nn.DataParallel(Discriminator(opt.output_nc))
+
+
 
 if opt.cuda:
     netG_A2B.cuda()
@@ -196,8 +209,10 @@ for epoch in range(opt.epoch, opt.n_epochs):
     lr_scheduler_D_B.step()
 
     # Save models checkpoints
-    torch.save(netG_A2B.state_dict(), 'output/netG_A2B.pth')
-    torch.save(netG_B2A.state_dict(), 'output/netG_B2A.pth')
-    torch.save(netD_A.state_dict(), 'output/netD_A.pth')
-    torch.save(netD_B.state_dict(), 'output/netD_B.pth')
+    save_dir = "output/" + opt.dataroot[9:]
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    # torch.save(netG_A2B.state_dict(), save_dir + 'netG_A2B.pth')
+    # torch.save(netG_B2A.state_dict(), save_dir + 'netG_B2A.pth')
+    # torch.save(netD_A.state_dict(), save_dir + 'netD_A.pth')
+    # torch.save(netD_B.state_dict(), save_dir + 'netD_B.pth')
 ###################################
