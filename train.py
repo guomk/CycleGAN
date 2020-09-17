@@ -211,8 +211,8 @@ for epoch in range(opt.epoch, opt.n_epochs):
     # Save models checkpoints
     save_dir = "output/" + opt.dataroot[9:]
     Path(save_dir).mkdir(parents=True, exist_ok=True)
-    # torch.save(netG_A2B.state_dict(), save_dir + 'netG_A2B.pth')
-    # torch.save(netG_B2A.state_dict(), save_dir + 'netG_B2A.pth')
-    # torch.save(netD_A.state_dict(), save_dir + 'netD_A.pth')
-    # torch.save(netD_B.state_dict(), save_dir + 'netD_B.pth')
+    torch.save(netG_A2B.state_dict(), save_dir + 'netG_A2B.pth')
+    torch.save(netG_B2A.state_dict(), save_dir + 'netG_B2A.pth')
+    torch.save(netD_A.state_dict(), save_dir + 'netD_A.pth')
+    torch.save(netD_B.state_dict(), save_dir + 'netD_B.pth')
 ###################################

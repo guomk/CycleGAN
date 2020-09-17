@@ -65,10 +65,11 @@ dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, mode
 ###### Testing######
 
 # Create output dirs if they don't exist
-if not os.path.exists('output/A'):
-    os.makedirs('output/A')
-if not os.path.exists('output/B'):
-    os.makedirs('output/B')
+save_dir = "output/" + opt.dataroot[9:]
+if not os.path.exists(save_dir + 'A'):
+    os.makedirs(save_dir + 'A')
+if not os.path.exists(save_dir + 'B'):
+    os.makedirs(save_dir + 'B')
 
 for i, batch in enumerate(dataloader):
     # Set model input
@@ -80,8 +81,8 @@ for i, batch in enumerate(dataloader):
     fake_A = 0.5*(netG_B2A(real_B).data + 1.0)
 
     # Save image files
-    save_image(fake_A, 'output/A/%04d.png' % (i+1))
-    save_image(fake_B, 'output/B/%04d.png' % (i+1))
+    save_image(fake_A, save_dir + 'A/%04d.png' % (i+1))
+    save_image(fake_B, save_dir + 'B/%04d.png' % (i+1))
 
     sys.stdout.write('\rGenerated images %04d of %04d' % (i+1, len(dataloader)))
 
