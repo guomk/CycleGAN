@@ -5,7 +5,7 @@ import sys
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--batchSize', type=int, default=1, help='size of the batches')
+parser.add_argument('--batchSize', type=int, default=1, help='size of the batches (batchSize != 1 during inference may incur error')
 parser.add_argument('--dataroot', type=str, default='datasets/horse2zebra/', help='root directory of the dataset')
 parser.add_argument('--saveDir', type=str, required=True, help='save directory of the output')
 parser.add_argument('--input_nc', type=int, default=1, help='number of channels of input data')
@@ -21,6 +21,9 @@ print(opt)
 
 # Set gpu(s)
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+
+import numpy as np
+import glob
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
@@ -90,6 +93,18 @@ if not os.path.exists(save_dir + 'A'):
 if not os.path.exists(save_dir + 'B'):
     os.makedirs(save_dir + 'B')
 
+# Prepare file names
+filename_A, filename_B = [], []
+for file in os.listdir(opt.dataroot + "/test/A"):
+    if file.endswith(".jpg") or file.endswith(".png"):
+        filename_A.append(file[:-4]) # Strip off file format (.jpg)
+
+for file in os.listdir(opt.dataroot + "/test/B"):
+    if file.endswith(".jpg") or file.endswith(".png"):
+        filename_B.append(file[:-4]) # Strip off file format (.jpg)
+
+
+
 for i, batch in enumerate(dataloader):
     
     # Skip the final batch when the total number of training images modulo batch-size does not equal zero
@@ -105,8 +120,8 @@ for i, batch in enumerate(dataloader):
     fake_A = 0.5*(netG_B2A(real_B).data + 1.0)
 
     # Save image files
-    save_image(fake_A, save_dir + 'A/%04d.png' % (i+1))
-    save_image(fake_B, save_dir + 'B/%04d.png' % (i+1))
+    save_image(fake_A, save_dir + f'A/{filename_A[i]}_fake.png')
+    save_image(fake_B, save_dir + f'B/{filename_A[i]}_fake.png')
 
     sys.stdout.write('\rGenerated images %04d of %04d' % (i+1, len(dataloader)))
 

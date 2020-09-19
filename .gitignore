@@ -108,3 +108,6 @@ output/
 
 # model checkpoints
 *.pth
+
+# temp file
+test_tmp.py
