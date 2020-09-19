@@ -10,6 +10,7 @@ parser.add_argument('--epoch', type=int, default=0, help='starting epoch')
 parser.add_argument('--n_epochs', type=int, default=200, help='number of epochs of training')
 parser.add_argument('--batchSize', type=int, default=1, help='size of the batches')
 parser.add_argument('--dataroot', type=str, default='datasets/horse2zebra/', help='root directory of the dataset')
+parser.add_argument('--saveDir', type=str, required=True, help='save directory of the output')
 parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate')
 parser.add_argument('--decay_epoch', type=int, default=100, help='epoch to start linearly decaying the learning rate to 0')
 parser.add_argument('--size', type=int, default=256, help='size of the data crop (squared assumed)')
@@ -43,24 +44,23 @@ if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
 
-for i in opt.gpu.split(','):
-    i = int(i)
-    print(f'cuda:[{i}] - {torch.cuda.get_device_name(i)}')
-
 ###### Definition of variables ######
 # Networks
-netG_A2B = torch.nn.DataParallel(Generator(opt.input_nc, opt.output_nc))
-netG_B2A = torch.nn.DataParallel(Generator(opt.output_nc, opt.input_nc))
-netD_A = torch.nn.DataParallel(Discriminator(opt.input_nc))
-netD_B = torch.nn.DataParallel(Discriminator(opt.output_nc))
+netG_A2B = Generator(opt.input_nc, opt.output_nc)
+netG_B2A = Generator(opt.output_nc, opt.input_nc)
+netD_A = Discriminator(opt.input_nc)
+netD_B = Discriminator(opt.output_nc)
 
 
 
 if opt.cuda:
-    netG_A2B.cuda()
-    netG_B2A.cuda()
-    netD_A.cuda()
-    netD_B.cuda()
+    netG_A2B = torch.nn.DataParallel(netG_A2B.cuda())
+    netG_B2A = torch.nn.DataParallel(netG_B2A.cuda())
+    netD_A = torch.nn.DataParallel(netD_A.cuda())
+    netD_B = torch.nn.DataParallel(netD_B.cuda())
+    for i in range(len(opt.gpu.split(','))):
+        i = int(i)
+        print(f'cuda:[{i}] - {torch.cuda.get_device_name(i)}')
 
 netG_A2B.apply(weights_init_normal)
 netG_B2A.apply(weights_init_normal)
@@ -113,7 +113,16 @@ dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, unal
 logger = Logger(opt.n_epochs, len(dataloader))
 ###################################
 
+
 ###### Training ######
+# Set up checkpoint directory
+save_dir = opt.saveDir
+if save_dir[0] == '/': save_dir = save_dir[1:]
+if save_dir[-1] == '/': save_dir = save_dir[:-1]
+save_dir += '_ckpt/'
+save_dir = "output/" + save_dir
+Path(save_dir).mkdir(parents=True, exist_ok=True)
+
 for epoch in range(opt.epoch, opt.n_epochs):
     for i, batch in enumerate(dataloader):
 
@@ -209,10 +218,8 @@ for epoch in range(opt.epoch, opt.n_epochs):
     lr_scheduler_D_B.step()
 
     # Save models checkpoints
-    save_dir = "output/" + opt.dataroot[9:]
-    Path(save_dir).mkdir(parents=True, exist_ok=True)
-    torch.save(netG_A2B.state_dict(), save_dir + 'netG_A2B.pth')
-    torch.save(netG_B2A.state_dict(), save_dir + 'netG_B2A.pth')
-    torch.save(netD_A.state_dict(), save_dir + 'netD_A.pth')
-    torch.save(netD_B.state_dict(), save_dir + 'netD_B.pth')
+    torch.save(netG_A2B.module.state_dict(), save_dir + 'netG_A2B.pth')
+    torch.save(netG_B2A.module.state_dict(), save_dir + 'netG_B2A.pth')
+    torch.save(netD_A.module.state_dict(), save_dir + 'netD_A.pth')
+    torch.save(netD_B.module.state_dict(), save_dir + 'netD_B.pth')
 ###################################

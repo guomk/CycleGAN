@@ -1,4 +1,4 @@
 {
     "python.pythonPath": "/home2/guom0014/fyp/venv2/bin/python",
-    "python.dataScience.jupyterServerURI": "https://localhost:8888/?token=9e471b7640162cedba508753d74fd71eba2de32d56cc8c91"
+    "python.dataScience.jupyterServerURI": "local"
 }
