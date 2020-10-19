@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# A modified version of CycleGAN with ideas from "CycleGAN with better Cycles"
+
 import os
 import argparse
 import itertools
@@ -48,8 +50,8 @@ if torch.cuda.is_available() and not opt.cuda:
 # Networks
 netG_A2B = Generator(opt.input_nc, opt.output_nc)
 netG_B2A = Generator(opt.output_nc, opt.input_nc)
-netD_A = Discriminator(opt.input_nc)
-netD_B = Discriminator(opt.output_nc)
+netD_A = Discriminator(opt.input_nc, output_intermediate=True)
+netD_B = Discriminator(opt.output_nc, output_intermediate=True)
 
 
 
@@ -128,6 +130,7 @@ save_dir = "output/ckpt/" + save_dir
 Path(save_dir).mkdir(parents=True, exist_ok=True)
 
 for epoch in range(opt.epoch, opt.n_epochs):
+    intermediate_lambda = 0.1 + 0.7 * epoch / opt.n_epochs  # semantic reconstruction loss starts small and gradually increases its weight
     for i, batch in enumerate(dataloader):
 
         # Skip the final batch when the total number of training images modulo batch-size does not equal zero
@@ -152,19 +155,25 @@ for epoch in range(opt.epoch, opt.n_epochs):
 
         # GAN loss
         fake_B = netG_A2B(real_A)
-        pred_fake = netD_B(fake_B)
+        pred_fake = netD_B(fake_B)[0]    
         loss_GAN_A2B = criterion_GAN(pred_fake, target_real)
 
         fake_A = netG_B2A(real_B)
-        pred_fake = netD_A(fake_A)
+        pred_fake = netD_A(fake_A)[0]
         loss_GAN_B2A = criterion_GAN(pred_fake, target_real)
 
         # Cycle loss
         recovered_A = netG_B2A(fake_B)
-        loss_cycle_ABA = criterion_cycle(recovered_A, real_A)*10.0
+        _, pred_real_A_intermediate = netD_A(real_A)
+        _, pred_recovered_A_intermediate = netD_A(recovered_A)  # pred_real_A_intermediate and pred_recovered_A_intermediate is used to calculate sematic reconstruction loss
+        loss_cycle_ABA = ((1 - intermediate_lambda) * criterion_cycle(recovered_A, real_A) + \
+                          (intermediate_lambda) * criterion_cycle(pred_recovered_A_intermediate, pred_real_A_intermediate))*10.0
 
         recovered_B = netG_A2B(fake_A)
-        loss_cycle_BAB = criterion_cycle(recovered_B, real_B)*10.0
+        _, pred_real_B_intermediate = netD_B(real_B)
+        _, pred_recovered_B_intermediate = netD_B(recovered_B)
+        loss_cycle_BAB = ((1 - intermediate_lambda) * criterion_cycle(recovered_B, real_B) + \
+                          (intermediate_lambda) * criterion_cycle(pred_recovered_B_intermediate, pred_real_B_intermediate))*10.0
 
         # Total loss
         loss_G = loss_identity_A + loss_identity_B + loss_GAN_A2B + loss_GAN_B2A + loss_cycle_ABA + loss_cycle_BAB
@@ -177,12 +186,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
         optimizer_D_A.zero_grad()
 
         # Real loss
-        pred_real = netD_A(real_A)
+        pred_real = netD_A(real_A)[0]
         loss_D_real = criterion_GAN(pred_real, target_real)
 
         # Fake loss
         fake_A = fake_A_buffer.push_and_pop(fake_A)
-        pred_fake = netD_A(fake_A.detach())
+        pred_fake = netD_A(fake_A.detach())[0]
         loss_D_fake = criterion_GAN(pred_fake, target_fake)
 
         # Total loss
@@ -196,12 +205,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
         optimizer_D_B.zero_grad()
 
         # Real loss
-        pred_real = netD_B(real_B)
+        pred_real = netD_B(real_B)[0]
         loss_D_real = criterion_GAN(pred_real, target_real)
         
         # Fake loss
         fake_B = fake_B_buffer.push_and_pop(fake_B)
-        pred_fake = netD_B(fake_B.detach())
+        pred_fake = netD_B(fake_B.detach())[0]
         loss_D_fake = criterion_GAN(pred_fake, target_fake)
 
         # Total loss

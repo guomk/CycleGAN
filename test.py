@@ -87,7 +87,7 @@ dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, mode
 save_dir = opt.saveDir
 if save_dir[0] == '/': save_dir = save_dir[1:]
 if save_dir[-1] != '/': save_dir = save_dir + '/'
-save_dir = "output/" + save_dir
+save_dir = "output/inference/" + save_dir
 if not os.path.exists(save_dir + 'A'):
     os.makedirs(save_dir + 'A')
 if not os.path.exists(save_dir + 'B'):
