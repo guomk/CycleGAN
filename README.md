@@ -36,8 +36,29 @@ python train_better.py --dataroot datasets/ct2mri/ --cuda --n_epochs=300 --decay
 python test.py --dataroot datasets/rire/ --cuda --size=110 --generator_A2B output/better_gan_ckpt/netG_A2B.pth --generator_B2A output/better_gan_ckpt/netG_B2A.pth --saveDir better_gan_rire
 ```
 
+### file structure
+dataset can be found in `/data/guom0014/fyp_code/CycleGAN/datasets` at 172.21.32.87 (bionet01)
+```
+# datasets
+.
+├── datasets                   
+|   ├── <dataset_name>         # i.e. ct2mri
+|   |   ├── train              # Training
+|   |   |   ├── A              # Contains domain A images (CT)
+|   |   |   └── B              # Contains domain B images (MRI)
+|   |   └── test               # Testing
+|   |   |   ├── A              # Contains domain A images (CT)
+|   |   |   └── B              # Contains domain B images (MRI)
 
+# checkpoints and inference results
+.
+├── output
+|   ├── ckpt                   # directory to store all the checkpoints
+|   |   └── <checkpoint_name>  # (specified with --saveDir during training)
+|   ├── inference              # directory to store all the inference (test) results
+|   |   └── <folder_name>      # (specified with --saveDir during testing)
 
+```
 
 
 
