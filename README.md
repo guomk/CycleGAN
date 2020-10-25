@@ -37,7 +37,7 @@ python test.py --dataroot datasets/rire/ --cuda --size=110 --generator_A2B outpu
 ```
 
 ### file structure
-dataset can be found in `/data/guom0014/fyp_code/CycleGAN/datasets` at 172.21.32.87 (bionet01)
+The datasets can be downloaded here (https://drive.google.com/file/d/17JLJ6ce6UdpiH0C6G2Mcmf4CdfbZaAIZ/view?usp=sharinghttps://drive.google.com/file/d/17JLJ6ce6UdpiH0C6G2Mcmf4CdfbZaAIZ/view?usp=sharing) and a complete code can also be found in (/data/guom0014/fyp_code/CycleGAN/data/guom0014/fyp_code/CycleGAN) at bionet01 (172.21.32.87)
 ```
 # datasets
 .
@@ -59,6 +59,8 @@ dataset can be found in `/data/guom0014/fyp_code/CycleGAN/datasets` at 172.21.32
 |   |   └── <folder_name>      # (specified with --saveDir during testing)
 
 ```
+
+
 
 
 
